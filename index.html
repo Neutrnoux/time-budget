@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>时间预算</title>
+<meta name="theme-color" content="#0d1020">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">⏳ 时间预算</div>
+    <div class="top-actions">
+      <button class="btn ghost" id="plansBtn" title="查看全部计划">📋 计划</button>
+      <button class="btn ghost" id="statsBtn" title="统计图表">📊 统计</button>
+      <button class="btn ghost" id="noiseBtn" title="白噪音">🎵 白噪音</button>
+      <button class="btn ghost" id="exportBtn" title="导出数据为 JSON">导出</button>
+      <button class="btn ghost" id="importBtn" title="从 JSON 导入">导入</button>
+      <button class="btn ghost" id="focusBtn" title="全屏专注倒计时">⏱ 专注</button>
+      <button class="btn primary" id="addBtn">＋ 新建计划</button>
+    </div>
+    <input type="file" id="importFile" accept=".json,application/json" hidden>
+  </header>
+
+  <div class="layout">
+    <!-- 左侧：正在进行（摘要）→ 今日（卡片） -->
+    <div class="col-left">
+      <!-- 正在进行摘要卡 -->
+      <section class="summary" id="globalSummary"></section>
+
+      <!-- 今日面板：今日块以卡片形式排列 -->
+      <section class="today" id="todayPanel"></section>
+    </div>
+
+    <!-- 右侧：月历（65%），点击某天 → 日历下方展示当日安排 -->
+    <aside class="col-right">
+      <section class="cal-wrap">
+        <div class="cal-head">
+          <h4 id="calTitle"></h4>
+          <div class="cal-nav">
+            <button type="button" id="calToday">今天</button>
+            <button type="button" id="calPrev">‹ 上月</button>
+            <button type="button" id="calNext">下月 ›</button>
+          </div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-legend">
+          <span><i class="lg-dot"></i>排定</span>
+          <span><i class="lg-line"></i>整日跳过</span>
+        </div>
+        <!-- 当日详情区（非弹窗）：信息 + ⋮ 操作；头部「＋」添加周期计划到这天 -->
+        <div class="cal-detail" id="calDetail" hidden>
+          <div class="cal-detail-head">
+            <b id="calDetailTitle"></b>
+            <button type="button" class="cal-detail-add" id="calAddBtn" title="把某个周期计划添加到这一天">＋</button>
+          </div>
+          <div id="calDetailList"></div>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<!-- 新建 / 编辑 计划页面（对齐 Swift：带返回键的独立页面；左表单 35% + 右日历 65%） -->
+<div class="editor-mask" id="editorMask" hidden>
+  <div class="editor-page">
+    <div class="editor-page-head">
+      <h3 id="editorTitle">新建计划</h3>
+      <button type="button" class="btn ghost" id="editorBackBtn">← 返回</button>
+    </div>
+    <div class="layout">
+      <div class="col-left">
+        <div class="modal">
+          <form id="planForm">
+            <input type="hidden" id="f_id">
+            <input type="hidden" id="f_emoji">
+            <label>名称<input id="f_name" required placeholder="如：离散数学复习"></label>
+
+            <div class="field">
+              <span>颜色</span>
+              <div class="swatches" id="f_swatches"></div>
+              <input type="hidden" id="f_color" value="#6c8cff">
+            </div>
+
+            <div class="field">
+              <span>重复</span>
+              <div class="repeat-type">
+                <label><input type="radio" name="repeat" value="daily"> 每天</label>
+                <label><input type="radio" name="repeat" value="weekly" checked> 每周</label>
+                <label><input type="radio" name="repeat" value="monthly"> 每月</label>
+              </div>
+              <div class="weekdays" id="f_weekdays"></div>
+              <div class="weekdays" id="f_monthdays" style="display:none"></div>
+            </div>
+
+            <div class="field">
+              <span>时间段（可加多个）</span>
+              <div id="f_blocks"></div>
+              <button type="button" class="btn ghost" id="addBlockBtn" style="margin-top:8px;padding:7px 12px;font-size:12px">＋ 添加时间段</button>
+            </div>
+            <div class="row">
+              <label>起<input type="date" id="f_from" required></label>
+              <label>止<input type="date" id="f_to" required></label>
+            </div>
+
+            <div class="modal-actions">
+              <button type="submit" class="btn primary">保存</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="col-right">
+        <!-- 编辑页右侧日历：统筹查看哪天忙闲，点某天看当天安排 -->
+        <section class="cal-wrap">
+          <div class="cal-head">
+            <h4 id="calTitleE"></h4>
+            <div class="cal-nav">
+              <button type="button" id="calTodayE">今天</button>
+              <button type="button" id="calPrevE">‹ 上月</button>
+              <button type="button" id="calNextE">下月 ›</button>
+            </div>
+          </div>
+          <div class="cal-grid" id="calGridE"></div>
+          <div class="cal-legend">
+            <span><i class="lg-dot"></i>排定</span>
+            <span><i class="lg-line"></i>整日跳过</span>
+            </div>
+          <div class="cal-detail" id="calDetailE" hidden>
+            <div class="cal-detail-head"><b id="calDetailETitle"></b></div>
+            <div id="calDetailEList"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 块操作弹窗（日历详情区 ⋮ 按钮打开：只改某天某块，不影响周期） -->
+<div class="modal-mask" id="blockOpsMask" hidden>
+  <div class="modal">
+    <h3 id="blockOpsTitle">块操作</h3>
+    <div id="blockOpsBody"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="blockOpsCloseBtn">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 添加计划到这天（日历详情区「＋」按钮打开：三列计划卡片，右上角加号） -->
+<div class="modal-mask" id="addPlanMask" hidden>
+  <div class="modal modal-wide">
+    <h3>添加计划到 <span id="addPlanDate"></span></h3>
+    <div id="addPlanList" class="plans"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="addPlanCloseBtn">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 计划界面（原主界面计划列表移入：右上角「📋 计划」进入，3 列卡片） -->
+<div class="plans-mask" id="plansMask" hidden>
+  <div class="plans-page">
+    <div class="plans-page-head">
+      <h3>📋 计划</h3>
+      <button type="button" class="btn ghost" id="plansBackBtn">← 返回</button>
+    </div>
+    <main class="plans" id="planList"></main>
+  </div>
+</div>
+
+<!-- 统计界面（R16 独立界面：右上角「📊 统计」进入，带返回按钮） -->
+<div class="stats-mask" id="statsMask" hidden>
+  <div class="stats-page">
+    <div class="stats-page-head">
+      <h3>📊 统计</h3>
+      <button type="button" class="btn ghost" id="statsBackBtn">← 返回</button>
+    </div>
+    <section class="stats" id="statsPanel"></section>
+  </div>
+</div>
+
+<!-- 全屏专注倒计时（R17b） -->
+<div class="focus-mask" id="focusMask" hidden>
+  <div class="focus-box">
+    <div class="focus-title">专注倒计时</div>
+    <div class="focus-time" id="focusTime">25:00</div>
+    <div class="focus-controls">
+      <button type="button" class="btn ghost" id="focusMinus">−5分</button>
+      <button type="button" class="btn primary" id="focusStart">开始</button>
+      <button type="button" class="btn ghost" id="focusReset">重置</button>
+      <button type="button" class="btn ghost" id="focusPlus">＋5分</button>
+    </div>
+    <label class="focus-noise"><input type="checkbox" id="focusNoise"> 伴随白噪音</label>
+    <button type="button" class="btn ghost" id="focusExit">退出专注</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+// 注册「离线管家」（PWA）。file:// 下不注册——双击本地打开照旧能用。
+if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script>
+</body>
+</html>

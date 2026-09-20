@@ -1,0 +1,290 @@
+:root{
+  --bg:#0d1020; --panel:#161b30; --panel2:#1c2240; --line:#2a3158;
+  --txt:#eaf0ff; --sub:#9aa3c7; --accent:#6c8cff; --accent2:#41e0c0;
+  --danger:#ff6b81;
+}
+*{box-sizing:border-box;font-family:-apple-system,"PingFang SC",system-ui,sans-serif}
+body{margin:0;min-height:100vh;color:var(--txt);
+  background:radial-gradient(1200px 700px at 75% -15%,#1a2148,#0d1020)}
+.app{max-width:1160px;margin:0 auto;padding:22px 18px 60px}
+
+/* 双栏布局：左内容 35% / 右月历 65% */
+.layout{display:grid;grid-template-columns:35fr 65fr;gap:18px;align-items:start}
+.col-left{display:flex;flex-direction:column;gap:16px;min-width:0}
+.col-right{position:sticky;top:16px;min-width:0}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .col-right{position:static}
+  .app{max-width:880px}
+}
+
+/* 顶栏 */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:10px;flex-wrap:wrap}
+.brand{font-size:22px;font-weight:800;letter-spacing:.5px}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* 按钮：按压缩放 + 阴影回弹（纯 CSS） */
+.btn{border:none;cursor:pointer;border-radius:12px;padding:11px 18px;font-size:14px;font-weight:700;
+  transition:transform .08s ease, box-shadow .2s ease, background .2s}
+.btn:active{transform:scale(.95)}
+.btn.primary{color:#0d1020;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 8px 22px rgba(108,140,255,.35)}
+.btn.primary:active{box-shadow:0 3px 10px rgba(108,140,255,.3)}
+.btn.ghost{background:transparent;color:var(--sub);border:1px solid var(--line)}
+.btn.ghost.on{color:var(--accent2);border-color:var(--accent2)}
+.btn.ghost:active{transform:scale(.95)}
+
+/* 今日面板 */
+.today{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.today h4{margin:0 0 10px;font-size:14px;color:var(--sub)}
+/* 跳过/恢复小按钮：轻量、即时、可逆 */
+.mini-btn{margin-left:6px;padding:2px 9px;font-size:11px;border-radius:99px;cursor:pointer;
+  border:1px solid var(--line);background:transparent;color:var(--sub);
+  transition:all .15s}
+.mini-btn.skip:hover{color:var(--danger);border-color:var(--danger);background:rgba(255,107,129,.08)}
+.mini-btn.restore{color:var(--accent2);border-color:var(--accent2)}
+.mini-btn.restore:hover{background:rgba(65,224,192,.12)}
+.mini-btn.extra{color:var(--accent);border-color:var(--accent)}
+.mini-btn.extra:hover{background:rgba(108,140,255,.12)}
+.mini-btn:active{transform:scale(.92)}
+.empty{color:var(--sub);font-size:13px}
+
+/* 正在进行摘要卡 */
+.summary{background:linear-gradient(135deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:18px;padding:22px;box-shadow:0 14px 40px rgba(0,0,0,.35)}
+.summary .label{color:var(--sub);font-size:13px;letter-spacing:.5px}
+.summary .big{font-size:42px;font-weight:800;font-variant-numeric:tabular-nums;margin:4px 0}
+.summary .big small{font-size:16px;color:var(--sub);font-weight:500;margin-left:6px}
+.summary .track{height:14px;border-radius:99px;background:#222a4d;overflow:hidden;margin-top:10px;position:relative}
+.summary .fill{height:100%;width:0;border-radius:99px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width 1s cubic-bezier(.4,0,.2,1);position:relative}
+.summary .fill::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);
+  transform:translateX(-100%);animation:shimmer 2.4s infinite}
+@keyframes shimmer{100%{transform:translateX(100%)}}
+.summary .meta{display:flex;gap:18px;margin-top:10px;color:var(--sub);font-size:13px;flex-wrap:wrap}
+.ongoing-row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--txt)}
+.ongoing-row .dot{flex:none}
+
+/* 今日面板：卡片式（v1.4.6 样式对齐周期计划卡片 .card） */
+.today-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px;font-size:14px;color:var(--sub);gap:10px;flex-wrap:wrap}
+.today-head .today-tabs{display:inline-flex;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.today-tabs button{background:transparent;border:none;color:var(--sub);padding:3px 12px;font-size:12px;cursor:pointer;transition:all .15s}
+.today-tabs button.on{background:var(--accent);color:#0d1020;font-weight:600}
+.today-tabs button:not(.on):hover{color:var(--txt)}
+.today-list{display:flex;flex-direction:column;gap:14px}
+.today-card{font-size:12px}
+.today-card.ongoing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;
+  background:linear-gradient(135deg,rgba(108,140,255,.12),rgba(65,224,192,.06))}
+.today-card.skipped{opacity:.5}
+.tc-state{margin-left:auto;font-size:11px;color:var(--sub);border:1px solid var(--line);border-radius:99px;padding:1px 8px;flex:none}
+.tc-state.on{color:var(--accent2);border-color:var(--accent2)}
+/* 电量条：展现「还剩多少」，右侧电池头，分级配色 */
+.battery{position:relative;display:block;height:10px;margin-top:8px;
+  border:1px solid var(--line);border-radius:99px;background:#222a4d;overflow:hidden}
+.battery-fill{display:block;height:100%;border-radius:99px;transition:width 1s ease}
+.battery-cap{position:absolute;right:-4px;top:2px;bottom:2px;width:3px;border-radius:0 2px 2px 0;background:var(--line)}
+
+/* 计划界面（v1.4.4：计划列表移入右上角按钮，3 列卡片） */
+.plans-mask{position:fixed;inset:0;z-index:41;background:radial-gradient(900px 600px at 50% 35%,#1a2148,#0d1020);
+  overflow-y:auto;padding:24px 16px 60px}
+.plans-mask[hidden]{display:none}
+.plans-page{max-width:1100px;margin:0 auto}
+.plans-page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.plans-page-head h3{margin:0;font-size:20px}
+
+/* 计划卡片 */
+.plans{display:grid;gap:14px;grid-template-columns:repeat(3,1fr);align-items:start}
+@media (max-width:900px){.plans{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.plans{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:16px 18px;position:relative;overflow:hidden}
+.card .accent-bar{position:absolute;left:0;top:0;bottom:0;width:5px}
+.card .head{display:flex;align-items:center;gap:10px}
+.card .emoji{font-size:24px}
+.card .name{font-size:17px;font-weight:700}
+.card .repeat{color:var(--sub);font-size:13px;margin-left:auto}
+.card .remain{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;margin:10px 0 2px}
+.card .remain small{font-size:14px;color:var(--sub);font-weight:500;margin-left:6px}
+.card .track{height:10px;border-radius:99px;background:#222a4d;overflow:hidden;margin-top:6px}
+.card .fill{height:100%;border-radius:99px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.card .meta{display:flex;gap:14px;color:var(--sub);font-size:12px;margin-top:8px}
+.card .ops{position:absolute;right:14px;bottom:14px;display:flex;gap:8px}
+.card .ops button{background:transparent;border:1px solid var(--line);color:var(--sub);
+  border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer;transition:transform .08s,color .2s}
+.card .ops button:active{transform:scale(.93)}
+.card .ops .del:hover{color:var(--danger);border-color:var(--danger)}
+
+/* 新建/编辑计划页面（v1.4.7：对齐 Swift 带返回键独立页面，非弹窗） */
+.editor-mask{position:fixed;inset:0;z-index:42;background:radial-gradient(900px 600px at 50% 35%,#1a2148,#0d1020);
+  overflow-y:auto;padding:24px 16px 60px}
+.editor-mask[hidden]{display:none}
+.editor-page{max-width:1160px;margin:0 auto}
+.editor-page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.editor-page-head h3{margin:0;font-size:20px}
+.editor-page .modal{width:100%;box-shadow:none}
+
+/* 弹窗（当日详情等） */
+.modal-mask{position:fixed;inset:0;background:rgba(5,7,16,.6);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;padding:18px;z-index:10}
+.modal-mask[hidden]{display:none}
+.modal{width:min(440px,100%);background:var(--panel);border:1px solid var(--line);
+  border-radius:18px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.5);
+  animation:pop .18s ease}
+@keyframes pop{from{transform:scale(.96);opacity:.6}to{transform:scale(1);opacity:1}}
+.modal h3{margin:0 0 16px}
+.modal label{display:block;color:var(--sub);font-size:13px;margin-bottom:14px}
+.modal input[type=text],.modal input[type=time],.modal input[type=date],.modal input:not([type]){
+  width:100%;margin-top:6px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--txt);font-size:14px}
+.field{margin-bottom:14px}
+.field>span{color:var(--sub);font-size:13px}
+.repeat-type{display:flex;gap:18px;margin:8px 0}
+.weekdays{display:flex;gap:6px;flex-wrap:wrap}
+.weekdays button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--sub);cursor:pointer;font-size:13px;transition:all .15s}
+.weekdays button.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0d1020;
+  border-color:transparent;font-weight:700}
+#f_monthdays button{width:34px;height:34px;font-size:12px}
+
+/* 月历（R12） */
+.cal-wrap{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-head h4{margin:0;font-size:15px}
+.cal-nav{display:flex;gap:6px}
+.cal-nav button{background:transparent;border:1px solid var(--line);color:var(--sub);
+  border-radius:9px;padding:5px 10px;font-size:12px;cursor:pointer;transition:all .15s}
+.cal-nav button:hover{color:var(--txt);border-color:var(--accent)}
+.cal-nav button:active{transform:scale(.94)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-wd{text-align:center;color:var(--sub);font-size:12px;padding:4px 0}
+.cal-cell{min-height:46px;border-radius:10px;border:1px solid transparent;background:var(--panel2);
+  cursor:pointer;padding:4px 2px;display:flex;flex-direction:column;align-items:center;transition:all .15s}
+.cal-cell:hover{border-color:var(--accent)}
+.cal-cell.empty{background:transparent;cursor:default}
+.cal-cell.today .cal-day{color:var(--accent)}
+.cal-cell.selected{border-color:var(--accent2);box-shadow:0 0 0 1px var(--accent2) inset;background:rgba(65,224,192,.1)}
+.cal-cell.selected .cal-day{color:var(--accent2)}
+.cal-cell.off{opacity:.42}
+.cal-cell.off .cal-day{text-decoration:line-through}
+.cal-day{font-size:13px;font-weight:600}
+.cal-dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:3px}
+.cal-dot{width:6px;height:6px;border-radius:50%}
+.cal-more{font-size:9px;color:var(--sub)}
+.cal-legend{display:flex;gap:16px;margin-top:10px;color:var(--sub);font-size:12px}
+.cal-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.cal-legend .lg-dot{background:var(--accent)}
+.cal-legend .lg-line{background:transparent;border:1px solid var(--sub);position:relative}
+.cal-legend .lg-line::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--sub)}
+
+/* 当日详情区（R12，日历下方内联展示） */
+.cal-detail{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.cal-detail-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-detail-head b{font-size:14px}
+.cal-detail-add{width:28px;height:28px;border-radius:50%;border:1px solid var(--accent2);color:var(--accent2);
+  background:transparent;font-size:16px;line-height:1;cursor:pointer;transition:all .15s}
+.cal-detail-add:hover{background:rgba(65,224,192,.12)}
+.cal-detail-list{display:flex;flex-direction:column;gap:8px}
+
+/* 窄卡片：无进度条，信息全 */
+.detail-card{position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:12px}
+.detail-card.muted{opacity:.55}
+.detail-card.adjusted{border-color:var(--accent2)}
+.dc-accent{position:absolute;left:0;top:0;bottom:0;width:4px}
+.detail-card .emoji{font-size:16px}
+.dc-name{font-weight:600;font-size:13px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dc-state{font-size:11px;color:var(--sub);border:1px solid var(--line);border-radius:99px;padding:0 7px;flex:none}
+.dc-state.on{color:var(--accent2);border-color:var(--accent2)}
+.dc-state.off{color:var(--danger);border-color:var(--danger)}
+.dc-time{color:var(--sub);font-variant-numeric:tabular-nums}
+.dc-left{font-weight:700;font-variant-numeric:tabular-nums}
+.dc-note{color:var(--sub);font-size:11px}
+.dc-ops{margin-left:auto;display:flex;gap:2px}
+/* ⋮ 块操作按钮 */
+.block-ops-btn{background:transparent;border:1px solid var(--line);color:var(--sub);
+  border-radius:8px;padding:1px 8px;font-size:14px;line-height:1.3;cursor:pointer;margin-left:auto;transition:all .15s}
+.block-ops-btn:hover{color:var(--accent2);border-color:var(--accent2)}
+.detail-ov{display:flex;justify-content:flex-end;margin-top:-2px;font-size:11px}
+/* 块操作弹窗 */
+.bo-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
+.bo-row:last-child{border-bottom:none}
+.bo-label{color:var(--sub);font-size:13px;width:34px;flex:none}
+.bo-hint{color:var(--sub);font-size:11px;width:100%}
+.bo-row input[type=time]{background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  border-radius:8px;padding:6px 8px;font-size:13px}
+/* 添加计划到这天弹窗 */
+.modal-wide{width:min(820px,100%)}
+.add-card{min-height:120px}
+.add-corner{position:absolute;right:10px;top:10px}
+.add-plan-btn{width:26px;height:26px;border-radius:50%;border:1px solid var(--accent2);color:var(--accent2);
+  background:transparent;font-size:15px;line-height:1;cursor:pointer;transition:all .15s}
+.add-plan-btn:hover{background:rgba(65,224,192,.12);transform:scale(1.1)}
+.add-done{font-size:11px;color:var(--sub);border:1px solid var(--line);border-radius:99px;padding:2px 8px}
+.add-card .repeat{margin-top:10px;color:var(--sub);font-size:12px;padding-right:56px}
+.add-card .meta{margin-top:8px}
+.detail-card.adj-editing{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.detail-card input[type=time]{background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  border-radius:8px;padding:4px 6px;font-size:12px}
+.tag-adj{font-size:10px;color:var(--accent2);border:1px solid var(--accent2);border-radius:99px;padding:1px 6px}
+.tag-extra{font-size:10px;color:var(--accent2);border:1px solid var(--accent2);border-radius:99px;padding:1px 7px}
+
+/* 统计（R16，独立界面层） */
+.stats-mask{position:fixed;inset:0;z-index:40;background:radial-gradient(900px 600px at 50% 35%,#1a2148,#0d1020);
+  overflow-y:auto;padding:24px 16px 60px}
+.stats-mask[hidden]{display:none}
+.stats-page{max-width:680px;margin:0 auto}
+.stats-page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.stats-page-head h3{margin:0;font-size:20px}
+.stats{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.stats h4{display:none} /* 界面已有大标题，隐藏面板内小标题 */
+.stat-overview{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.stat-big{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums}
+.stat-big small{font-size:13px;color:var(--sub);font-weight:500;margin-left:6px}
+.stat-meta{color:var(--sub);font-size:12px;margin-top:4px}
+.stat-sec{color:var(--sub);font-size:12px;margin:12px 0 6px}
+.stat-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.stat-name{width:110px;display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stat-bar{flex:1;height:8px;border-radius:99px;background:#222a4d;overflow:hidden}
+.stat-fill{display:block;height:100%;border-radius:99px;transition:width .5s ease}
+.stat-val{width:110px;text-align:right;color:var(--sub);white-space:nowrap}
+
+/* 全屏专注（R17b） */
+.focus-mask{position:fixed;inset:0;z-index:50;background:radial-gradient(900px 600px at 50% 35%,#1a2148,#0d1020);
+  display:flex;align-items:center;justify-content:center}
+.focus-mask[hidden]{display:none}
+.focus-box{text-align:center;display:flex;flex-direction:column;align-items:center;gap:18px}
+.focus-title{color:var(--sub);font-size:15px;letter-spacing:2px}
+.focus-time{font-size:clamp(64px,16vw,140px);font-weight:800;font-variant-numeric:tabular-nums;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.focus-controls{display:flex;gap:10px}
+.focus-noise{color:var(--sub);font-size:14px;cursor:pointer}
+
+/* 响应式（R18） */
+@media (max-width:640px){
+  .app{padding:14px 10px 40px}
+  .brand{font-size:19px}
+  .btn{padding:9px 13px;font-size:13px}
+  .card .meta{flex-wrap:wrap;gap:8px}
+  .cal-cell{min-height:38px}
+  .cal-day{font-size:12px}
+  .stat-name{width:86px}
+  .stat-val{width:86px}
+  .row{flex-direction:column}
+  .card .remain{font-size:24px}
+  .today-tabs{width:100%;justify-content:center}
+  .today-tabs button{flex:1}
+}
+.row{display:flex;gap:12px}
+.row label{flex:1}
+.swatches{display:flex;gap:8px;margin-top:8px}
+.swatches button{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .1s}
+.swatches button.on{border-color:#fff;transform:scale(1.12)}
+.block-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.block-row input[type=time]{flex:1;margin-top:0;padding:9px 10px}
+.block-row .dash{color:var(--sub)}
+.block-row .b-del{background:transparent;border:1px solid var(--line);color:var(--sub);
+  border-radius:8px;padding:8px 11px;font-size:13px;cursor:pointer;transition:all .15s}
+.block-row .b-del:hover{color:var(--danger);border-color:var(--danger)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
