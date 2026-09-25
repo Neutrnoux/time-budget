@@ -13,20 +13,16 @@
 </head>
 <body>
 <div class="app">
-  <header class="topbar">
-    <div class="brand">⏳ 时间预算</div>
+  <!-- v1.8.0（R22 去标题 / R21 顶栏瘦身）：产品名标题移除，顶栏只留主要动作；「计划/统计/导出/导入」全部收进「我的」 -->
+  <header class="topbar" id="topbar">
     <div class="top-actions">
-      <button class="btn ghost" id="plansBtn" title="查看全部计划">📋 计划</button>
-      <button class="btn ghost" id="statsBtn" title="统计图表">📊 统计</button>
-      <button class="btn ghost" id="noiseBtn" title="白噪音">🎵 白噪音</button>
-      <button class="btn ghost" id="exportBtn" title="导出数据为 JSON">导出</button>
-      <button class="btn ghost" id="importBtn" title="从 JSON 导入">导入</button>
-      <button class="btn ghost" id="focusBtn" title="全屏专注倒计时">⏱ 专注</button>
       <button class="btn primary" id="addBtn">＋ 新建计划</button>
     </div>
     <input type="file" id="importFile" accept=".json,application/json" hidden>
   </header>
 
+  <!-- 视图①预算：主界面（正在进行 + 今日 + 月历） -->
+  <section class="view" id="viewBudget">
   <div class="layout">
     <!-- 左侧：正在进行（摘要）→ 今日（卡片） -->
     <div class="col-left">
@@ -64,7 +60,44 @@
       </section>
     </aside>
   </div>
+  </section>
+
+  <!-- 视图②专注：R17b 倒计时（v1.8.0 由全屏层内联为标签页） -->
+  <section class="view" id="viewFocus" hidden>
+    <div class="focus-box">
+      <div class="focus-title">专注倒计时</div>
+      <div class="focus-time" id="focusTime">25:00</div>
+      <div class="focus-controls">
+        <button type="button" class="btn ghost" id="focusMinus">−5分</button>
+        <button type="button" class="btn primary" id="focusStart">开始</button>
+        <button type="button" class="btn ghost" id="focusReset">重置</button>
+        <button type="button" class="btn ghost" id="focusPlus">＋5分</button>
+      </div>
+      <div class="focus-hint">切到别的标签，计时不会停。</div>
+    </div>
+  </section>
+
+  <!-- 视图③我的：统计（R16）+ 数据管理（R19 降级方案）+ 全部计划入口 -->
+  <section class="view" id="viewMine" hidden>
+    <section class="stats" id="statsPanel"></section>
+    <section class="mine-card">
+      <div class="mine-sec">数据</div>
+      <div class="mine-actions">
+        <button type="button" class="btn ghost" id="plansBtn" title="查看全部计划">📋 全部计划</button>
+        <button type="button" class="btn ghost" id="exportBtn" title="导出数据为 JSON">导出</button>
+        <button type="button" class="btn ghost" id="importBtn" title="从 JSON 导入">导入</button>
+      </div>
+      <div class="mine-hint">数据只存在这台设备上（浏览器 localStorage）。换手机 / 换浏览器：先「导出」，到新设备再「导入」。</div>
+    </section>
+  </section>
 </div>
+
+<!-- v1.8.0（R21 + D8）：底部悬浮标签栏，对齐 iOS 原生 App 的下方菜单栏 -->
+<nav class="tabbar">
+  <button type="button" class="tab on" data-tab="budget"><span class="ti">⏳</span><span class="tl">预算</span></button>
+  <button type="button" class="tab" data-tab="focus"><span class="ti">⏱</span><span class="tl">专注</span></button>
+  <button type="button" class="tab" data-tab="mine"><span class="ti">👤</span><span class="tl">我的</span></button>
+</nav>
 
 <!-- 新建 / 编辑 计划页面（对齐 Swift：带返回键的独立页面；左表单 35% + 右日历 65%） -->
 <div class="editor-mask" id="editorMask" hidden>
@@ -173,32 +206,8 @@
   </div>
 </div>
 
-<!-- 统计界面（R16 独立界面：右上角「📊 统计」进入，带返回按钮） -->
-<div class="stats-mask" id="statsMask" hidden>
-  <div class="stats-page">
-    <div class="stats-page-head">
-      <h3>📊 统计</h3>
-      <button type="button" class="btn ghost" id="statsBackBtn">← 返回</button>
-    </div>
-    <section class="stats" id="statsPanel"></section>
-  </div>
-</div>
-
-<!-- 全屏专注倒计时（R17b） -->
-<div class="focus-mask" id="focusMask" hidden>
-  <div class="focus-box">
-    <div class="focus-title">专注倒计时</div>
-    <div class="focus-time" id="focusTime">25:00</div>
-    <div class="focus-controls">
-      <button type="button" class="btn ghost" id="focusMinus">−5分</button>
-      <button type="button" class="btn primary" id="focusStart">开始</button>
-      <button type="button" class="btn ghost" id="focusReset">重置</button>
-      <button type="button" class="btn ghost" id="focusPlus">＋5分</button>
-    </div>
-    <label class="focus-noise"><input type="checkbox" id="focusNoise"> 伴随白噪音</label>
-    <button type="button" class="btn ghost" id="focusExit">退出专注</button>
-  </div>
-</div>
+<!-- v1.8.0（R21）：原「统计界面」整块已移入「我的」标签页；原「全屏专注层」已移入「专注」标签页（见文件上方 .view） -->
+<!-- v1.8.0（R23）：原「内置白噪音」相关 UI（顶栏开关 + 专注层勾选）整体移除 -->
 
 <script src="app.js"></script>
 <script>

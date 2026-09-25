@@ -751,10 +751,7 @@ function openAddPlanModal(key) {
 $('#addPlanCloseBtn').onclick = () => { $('#addPlanMask').hidden = true; };
 $('#addPlanMask').onclick = e => { if (e.target === $('#addPlanMask')) $('#addPlanMask').hidden = true; };
 
-/* ---------- 统计（R16，独立界面：右上角按钮进入，带返回） ---------- */
-$('#statsBtn').onclick = () => { renderStats(new Date()); $('#statsMask').hidden = false; };
-$('#statsBackBtn').onclick = () => { $('#statsMask').hidden = true; };
-$('#statsMask').onclick = e => { if (e.target === $('#statsMask')) $('#statsMask').hidden = true; };
+/* ---------- 统计（R16）——v1.8.0 起不再是独立界面，改为「我的」标签页里的板块（由 setTab 触发渲染） ---------- */
 
 function renderStats(now) {
   const box = $('#statsPanel');
@@ -822,21 +819,23 @@ $('#importFile').onchange = e => {
 let focusSecs = 25 * 60, focusLeft = focusSecs, focusTimer = null, focusRunning = false;
 function focusRender() {
   const m = Math.floor(focusLeft / 60), s = focusLeft % 60;
-  $('#focusTime').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  const text = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  $('#focusTime').textContent = text;
   $('#focusStart').textContent = focusRunning ? '暂停' : '开始';
+  // v1.8.0：专注不再是全屏层，切走后也要能看见还剩多久 → 运行中把倒计时写到「专注」标签上
+  const tabLabel = document.querySelector('.tabbar .tab[data-tab=focus] .tl');
+  if (tabLabel) tabLabel.textContent = focusRunning ? text : '专注';
 }
 function focusTick() {
   if (!focusRunning) return;
   if (focusLeft <= 0) {
     clearInterval(focusTimer); focusRunning = false; focusLeft = focusSecs;
-    focusRender(); noiseStop();
+    focusRender();
     alert('⏰ 专注时间到！');
     return;
   }
   focusLeft--; focusRender();
 }
-$('#focusBtn').onclick = () => { $('#focusMask').hidden = false; focusRender(); };
-$('#focusExit').onclick = () => { clearInterval(focusTimer); focusRunning = false; $('#focusMask').hidden = true; noiseStop(); };
 $('#focusStart').onclick = () => {
   focusRunning = !focusRunning;
   if (focusRunning) { if (focusLeft <= 0) focusLeft = focusSecs; focusTimer = setInterval(focusTick, 1000); }
@@ -846,40 +845,27 @@ $('#focusStart').onclick = () => {
 $('#focusReset').onclick = () => { clearInterval(focusTimer); focusRunning = false; focusLeft = focusSecs; focusRender(); };
 $('#focusMinus').onclick = () => { focusSecs = Math.max(60, focusSecs - 300); if (!focusRunning) focusLeft = focusSecs; focusRender(); };
 $('#focusPlus').onclick = () => { focusSecs = Math.min(3 * 3600, focusSecs + 300); if (!focusRunning) focusLeft = focusSecs; focusRender(); };
-$('#focusNoise').onchange = e => { if (e.target.checked) noiseStart(); else noiseStop(); };
-
-/* ---------- 内置白噪音（R17a，Web Audio 实时生成，无音频文件） ---------- */
-let noiseCtx = null, noiseSrc = null, noiseOn = false;
-function noiseStart() {
-  if (noiseSrc) return;
-  try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    noiseCtx = new Ctx();
-    const buffer = noiseCtx.createBuffer(1, noiseCtx.sampleRate * 2, noiseCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-    noiseSrc = noiseCtx.createBufferSource();
-    noiseSrc.buffer = buffer; noiseSrc.loop = true;
-    const gain = noiseCtx.createGain(); gain.gain.value = 0.08;
-    noiseSrc.connect(gain).connect(noiseCtx.destination);
-    noiseSrc.start();
-  } catch (e) { alert('无法启动白噪音：' + e.message); }
-}
-function noiseStop() {
-  if (noiseSrc) { try { noiseSrc.stop(); } catch (e) {} noiseSrc = null; }
-  if (noiseCtx) { try { noiseCtx.close(); } catch (e) {} noiseCtx = null; }
-  $('#focusNoise').checked = false;
-}
-$('#noiseBtn').onclick = () => {
-  noiseOn = !noiseOn;
-  if (noiseOn) noiseStart(); else noiseStop();
-  $('#noiseBtn').classList.toggle('on', noiseOn);
-};
+/* v1.8.0（R23）：内置白噪音（原 R17a）整体移除——顶栏开关、专注层勾选、生成音频的代码与相关 CSS 全部删除。 */
 
 /* ---------- 计划界面（主界面计划列表移入：右上角「📋 计划」进入，3 列卡片） ---------- */
 $('#plansBtn').onclick = () => { renderPlans(new Date()); $('#plansMask').hidden = false; };
 $('#plansBackBtn').onclick = () => { $('#plansMask').hidden = true; };
 $('#plansMask').onclick = e => { if (e.target === $('#plansMask')) $('#plansMask').hidden = true; };
+
+/* ---------- 底部标签栏：预算 / 专注 / 我的（v1.8.0，R21 + D8） ---------- */
+let activeTab = 'budget';
+function setTab(name) {
+  activeTab = name;
+  document.querySelectorAll('.tabbar .tab').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  $('#viewBudget').hidden = name !== 'budget';
+  $('#viewFocus').hidden = name !== 'focus';
+  $('#viewMine').hidden = name !== 'mine';
+  $('#topbar').hidden = name !== 'budget'; // 顶栏「＋ 新建计划」只在预算页露出
+  if (name === 'mine') renderStats(new Date());
+  if (name === 'focus') focusRender();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('.tabbar .tab').forEach(b => { b.onclick = () => setTab(b.dataset.tab); });
 
 function renderAll(now) {
   renderGlobal(now); renderToday(now); renderCal(mainCal()); renderCal(editCal()); renderDayInfoE(selectedKeyE); renderStats(now); renderPlans(now);
@@ -1030,6 +1016,7 @@ $('#planForm').onsubmit = e => {
 
 /* ---------- 启动 ---------- */
 renderAll(new Date());
+setTab('budget'); // v1.8.0：默认落在「预算」标签页
 
 // 向浏览器申请「持久存储」：手机存储紧张时别自动清掉 localStorage。
 // 浏览器可以同意也可以拒绝；拒绝不影响使用，所以失败静默忽略。
@@ -1038,6 +1025,10 @@ if (navigator.storage && navigator.storage.persist) {
 }
 setInterval(() => {
   // 每秒只刷新倒计时相关区域；月历/统计只在数据变化时重建（由 renderAll 调用）
+  // v1.8.0：按当前标签页只刷可见区域，隐藏视图不白刷
   const now = new Date();
-  renderGlobal(now); renderToday(now); renderPlans(now); renderStats(now); renderDayInfoE(selectedKeyE);
+  if (activeTab === 'budget') { renderGlobal(now); renderToday(now); }
+  if (activeTab === 'mine') renderStats(now);
+  renderPlans(now);
+  renderDayInfoE(selectedKeyE);
 }, 1000);

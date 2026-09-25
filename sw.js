@@ -8,7 +8,7 @@
  * 而且很难查——对一个人维护的小项目，这个坑不值得踩。
  */
 
-const CACHE = 'shijian-yusuan-v1';
+const CACHE = 'shijian-yusuan-v2';
 
 const ASSETS = [
   './',
